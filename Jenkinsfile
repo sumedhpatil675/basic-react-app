@@ -1,28 +1,31 @@
 pipeline {
     agent any
 
- environment {
-        CI = 'false'
-    } 
-    
     stages {
-        stage('Checkout Code from Git') {
+        stage('Build') {
             steps {
-                // Checkout the code from your Git repository
-                git(url: 'https://github.com/sumedhpatil675/basic-react-app.git', branch: 'master')
+                // Checkout your React app's source code from SCM
+                checkout scm
+                
+                // Build the React app
+                sh 'npm install'
+                sh 'npm run build'
             }
         }
-          stage('Build React App') {
+        
+        stage('Deploy') {
             steps {
-                // Copy the build to Nginx's web root directory
-                sh 'npm install && npm run build'
-            }
-        }
-        stage('Deploy to Nginx') {
-            steps {
-                // Copy the build to Nginx's web root directory
-                sh 'cp -r //root/.jenkins/workspace/basic_app_pipeline/build/* /var/www/html/'
+                // Build a Docker image of your React app
+                sh 'docker build -t my-react-app-image .'
+                
+                // Push the Docker image to a local Docker registry (optional)
+                // Use docker push if needed
+                // sh 'docker push my-react-app-image'
+                
+                // Run the Docker container on your local machine
+                sh 'docker run -d -p 8080:80 --name my-react-app-container my-react-app-image'
             }
         }
     }
 }
+
